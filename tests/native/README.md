@@ -16,7 +16,7 @@ This directory contains an original harness, not QCAD source or a redistributabl
 
 The QtScript harness calls native `RPasteOperation`, imports/exports through Community Edition's dxflib backend, and inspects native `REntity.getShapes()` results. It compares full directed line endpoints and circle centers/radii with a 1e-7 tolerance; it never infers success from an exit code, bounding box, or a custom transform implementation.
 
-Five scenarios must pass both immediately after paste and after save/reopen:
+Two no-paste controls first import, save and reopen the original target and donor independently, comparing their native shapes and retained INSERT counts. This isolates baseline exporter behavior from block-transfer behavior. Five additional scenarios must pass both immediately after paste and after save/reopen:
 
 1. Unprepared donor, retain destination definitions: the intended donor geometry changes in the exact expected way
 2. Unprepared donor, overwrite destination definitions: the original target geometry changes in the exact expected way
@@ -26,7 +26,13 @@ Five scenarios must pass both immediately after paste and after save/reopen:
 
 Each reopened drawing must still have five native model-space INSERT entities. Both `SAME` instances must reference one shared block ID and one circle-containing definition. Both positive cases also retain each assembly's nested reference and each leaf's native editable line. A native transaction changes only `TRANSFER_LEAF` after reopening, and both dependent donor instances must change to the expected geometry while the target stays unchanged. Undo must restore the exact intended result.
 
-The JSON report is then validated independently by `summarize.py`, which rejects missing cases, missing shapes, failed native checks, incorrect consumer provenance, and absent saved outputs. It also loads all five saved DXFs with ezdxf 1.4.4, requires zero audit errors and zero automatic fixes, and independently traverses virtual INSERT entities to compare full line/circle geometry to the handwritten expectations. This saved-output check uses the same explicitly documented 1e-7 tolerance for serialized floating-point coordinates/rotations; the input-fixture oracle retains exact Fraction arithmetic. Only counts and pass/fail facts from this secondary audit enter the summary. This is a bounded feasibility experiment, not a general claim about arbitrary DXF content.
+The JSON report is then validated independently by `summarize.py`, which rejects missing baselines/cases, missing shapes, failed native checks, incorrect consumer provenance, and absent saved outputs.
+
+Before any audit mutation, the original tag-reader/Fraction oracle checks all seven saved DXFs exactly and writes `saved-geometry-oracle.json`. Separately, ezdxf 1.4.4 traverses virtual INSERT entities and compares full line/circle geometry with the handwritten expectations using an explicit 1e-7 bound for serialized floating-point values. Both geometry checks are required.
+
+The ezdxf audit requires zero errors and zero fixes for every baseline and paste output, with no exception for a known exporter limitation. It inspects all seven files even if earlier files need repairs and writes `independent-audit.json` before raising the overall failure. The artifact records exact audit codes, entity types, handles, old/new owners, and all observed in-memory owner changes, including table normalizations that ezdxf does not list as fixes. No audited document is saved. File hashes and byte-preservation checks confirm the original native outputs remain untouched.
+
+Native shape/structure success and strict independent export-audit success are distinct results. A native pass does not override an audit failure. This is a bounded feasibility experiment, not a general claim about arbitrary DXF content.
 
 ## Primary sources checked
 

@@ -54,6 +54,9 @@ except Exception as error:
     # Keep only the exception class for unexpected runtime/setup errors. Paths and raw
     # native messages remain private. The native report carries our assertion messages.
     result["exception_class"] = type(error).__name__
+    if "summarize" in globals() and isinstance(error, summarize.GateValidationError):
+        result["phase"] = error.phase
+        result["validation_failure"] = {"message": str(error)}
     if log.exists():
         result["diagnostic"] = classify(log.read_text(errors="replace"))
 finally:

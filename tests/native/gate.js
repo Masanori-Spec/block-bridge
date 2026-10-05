@@ -15,7 +15,7 @@ include("scripts/library.js");
         sourceTag: "v3.33.1.0", sourceCommit: "897079c2d11aaa0869f839a6cf5df8a937dbddbe",
         version: RSettings.getVersionString(), tolerance: 0.0000001,
         inspection: "Native REntity.getShapes line endpoints and circle centers/radii; editable block graph",
-        cases: [], assertions: 0};
+        baselines: [], cases: [], assertions: 0};
     var phase = "initialization";
     var openDocuments = [];
     function check(ok, message) {
@@ -131,6 +131,26 @@ include("scripts/library.js");
         loaded.di.undo();
         compare(shapes(loaded.doc), intended, "Undo restores exact prepared result");
     }
+    function baseline(id, inputName, expected, expectedInsertCount) {
+        phase = id;
+        var source = load(inputName);
+        var before = shapes(source.doc);
+        compare(before, expected, id + " before native save");
+        var file = output + "/" + id + ".dxf";
+        check(source.di.exportFile(file, "R15"), id + ": native save failed");
+        var reopened = load(file, true);
+        var after = shapes(reopened.doc);
+        compare(after, expected, id + " after save/reopen");
+        var ids = reopened.doc.queryBlockEntities(reopened.doc.getModelSpaceBlockId());
+        check(ids.length === expectedInsertCount, id + ": wrong reopened INSERT count");
+        for (var i = 0; i < ids.length; i++) {
+            check(isBlockReferenceEntity(reopened.doc.queryEntity(ids[i])), id + ": flattened INSERT");
+        }
+        report.baselines.push({id: id, passed: true, pasteApplied: false, inputDrawing: inputName,
+            beforeSave: before, afterReopen: after, topLevelInsertCount: ids.length,
+            savedDrawing: id + ".dxf"});
+        closeAll();
+    }
     function scenario(id, donorName, overwriteBlocks, expected, positive) {
         phase = id;
         var destination = load("target.dxf");
@@ -163,6 +183,8 @@ include("scripts/library.js");
     }
     try {
         check(/^3\.33\.1(?:\.|$)/.test(report.version), "Unexpected native QCAD version");
+        baseline("target-baseline", "target.dxf", [targetLine, circles[0]], 2);
+        baseline("donor-baseline", "donor.dxf", donorLines.concat([circles[1]]), 3);
         scenario("unprepared-keep", "donor.dxf", false, keep, false);
         scenario("unprepared-overwrite", "donor.dxf", true, overwrite, false);
         scenario("outer-only-keep", "outer-only-donor.dxf", false, keep, false);

@@ -1,0 +1,195 @@
+name: BlockBridge product verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/product-verify.yml'
+      - 'src/**'
+      - 'index.html'
+      - '*.css'
+      - '*.mjs'
+      - 'package*.json'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'fixtures/**'
+      - 'requirements-test.txt'
+  pull_request:
+    paths:
+      - '.github/workflows/product-verify.yml'
+      - 'src/**'
+      - 'index.html'
+      - '*.css'
+      - '*.mjs'
+      - 'package*.json'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'fixtures/**'
+      - 'requirements-test.txt'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blockbridge-product-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core:
+    name: Original parser and plan tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned test-only dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run core tests and independent artifact-reader tests
+        run: |
+          npm test
+          node --test tests/browser/artifact-contract.test.mjs
+      - name: Build bounded static application
+        run: npm run build
+
+  browser:
+    name: Sandboxed Chromium review and actual export
+    needs: core
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned test-only dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install official Playwright Chromium and system dependencies
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk > "$RUNNER_TEMP/blockbridge-browser-font-install.log" 2>&1
+      - name: Exercise desktop and 390px mobile user flows with sandbox enabled
+        run: npm run test:browser
+      - name: Revalidate the actual browser artifact before downstream consumption
+        run: node tests/browser/artifact-contract.mjs --verify-directory artifacts/browser/export
+      - name: Retain only actual first-party browser-exported donor and manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockbridge-browser-export
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            artifacts/browser/export/donor-transfer.dxf
+            artifacts/browser/export/collision-map.json
+            artifacts/browser/export/preservation-report.json
+            artifacts/browser/export/browser-evidence.json
+      - name: Retain original app screenshots and concise browser test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockbridge-browser-review
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            artifacts/browser/screenshots/*.png
+            artifacts/browser/summary.json
+      - name: Record the remaining manual visual review requirement
+        if: always()
+        run: |
+          printf '%s\n' '## Browser verification boundary' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' 'This job retains desktop and 390px mobile screenshots of the original synthetic app. A person or an image-capable reviewer must inspect the exact-run screenshots before release. Browser assertions do not constitute manual visual review or general CAD compatibility.' >> "$GITHUB_STEP_SUMMARY"
+
+  native:
+    name: Native QCAD behavior on actual browser donor
+    needs: browser
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Download only the same-run browser export
+        uses: actions/download-artifact@v4
+        with:
+          name: blockbridge-browser-export
+          path: artifacts/browser/export
+      - name: Verify exact commit and browser manifest hashes before native execution
+        run: node tests/browser/artifact-contract.mjs --verify-directory artifacts/browser/export
+      - name: Install independent test-only DXF audit dependency
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-test.txt > "$RUNNER_TEMP/blockbridge-pip.log" 2>&1
+          python tests/owner_complete_audit.py
+          python tests/native/behavior_selftest.py
+          node --check tests/native/gate.js
+          bash -n scripts/build-qcad.sh
+      - name: Install official Ubuntu Qt5 build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update > "$RUNNER_TEMP/blockbridge-apt.log" 2>&1
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git qt5-qmake qtbase5-dev qtbase5-dev-tools \
+            qtscript5-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev \
+            libqt5xmlpatterns5-dev libqt5opengl5-dev libglu1-mesa-dev \
+            libfreetype6-dev libfontconfig1-dev libssl-dev libdbus-1-dev \
+            libsm-dev libx11-dev libxext-dev libxrender-dev \
+            >> "$RUNNER_TEMP/blockbridge-apt.log" 2>&1
+      - name: Build pinned official QCAD Community Edition only in runner temporary storage
+        shell: bash
+        run: bash scripts/build-qcad.sh
+      - name: Test native paste, edit, undo, save and reopen on the actual browser donor
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python tests/native/run_behavior_gate.py \
+            --browser-donor artifacts/browser/export/donor-transfer.dxf \
+            --output artifacts/native-behavior
+      - name: Keep strict audit status distinct from scoped native behavior
+        if: always()
+        shell: bash
+        run: |
+          printf '%s\n' '## Native verification boundary' >> "$GITHUB_STEP_SUMMARY"
+          printf '%s\n' 'The existing Native QCAD feasibility gate is unchanged and remains an independent strict zero-repair audit. A scoped native-behavior pass does not override that gate or establish general DXF interoperability. Read the exact native-behavior evidence and strict audit status separately.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain only first-party safe native observations and synthetic DXF outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockbridge-product-native-evidence
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            artifacts/oracle/owner-complete-inputs.json
+            artifacts/oracle/behavior-validator-selftest.json
+            artifacts/native/build-summary.json
+            artifacts/native-behavior/native-gate.json
+            artifacts/native-behavior/runtime-summary.json
+            artifacts/native-behavior/input-integrity.json
+            artifacts/native-behavior/saved-geometry-oracle.json
+            artifacts/native-behavior/native-behavior.json
+            artifacts/native-behavior/target-baseline.dxf
+            artifacts/native-behavior/donor-baseline.dxf
+            artifacts/native-behavior/unprepared-keep.dxf
+            artifacts/native-behavior/unprepared-overwrite.dxf
+            artifacts/native-behavior/outer-only-keep.dxf
+            artifacts/native-behavior/prepared-keep.dxf
+            artifacts/native-behavior/prepared-overwrite.dxf
+      - name: Remove ephemeral third-party source, binaries, configurations and raw logs
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/blockbridge-consumer" "$RUNNER_TEMP/blockbridge-config" "$RUNNER_TEMP/blockbridge-runtime"
+          find "$RUNNER_TEMP" -maxdepth 1 -type d -name 'blockbridge-behavior-*' -exec rm -rf {} +
+          rm -f "$RUNNER_TEMP/blockbridge-source-build.log" "$RUNNER_TEMP/blockbridge-native-runtime.log" \
+            "$RUNNER_TEMP/blockbridge-behavior-runtime.log" "$RUNNER_TEMP/blockbridge-apt.log" "$RUNNER_TEMP/blockbridge-pip.log"

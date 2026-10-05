@@ -1,0 +1,65 @@
+{
+  "units": "mm",
+  "target_original_lines": [
+    [
+      105,
+      5,
+      105,
+      25
+    ]
+  ],
+  "donor_intended_lines": [
+    [
+      5,
+      105,
+      -35,
+      105
+    ],
+    [
+      50,
+      50,
+      50,
+      40
+    ]
+  ],
+  "unprepared_keep_target_donor_lines": [
+    [
+      5,
+      105,
+      5,
+      125
+    ],
+    [
+      50,
+      50,
+      45,
+      50
+    ]
+  ],
+  "unprepared_overwrite_changed_target_lines": [
+    [
+      105,
+      5,
+      65,
+      5
+    ]
+  ],
+  "merged_circles": [
+    [
+      202,
+      2,
+      3
+    ],
+    [
+      2,
+      2,
+      3
+    ]
+  ],
+  "rename_map": {
+    "LEAF": "TRANSFER_LEAF",
+    "ASSEMBLY": "TRANSFER_ASSEMBLY"
+  },
+  "equivalent_reused_block": "SAME",
+  "fixture_role": "Original owner-complete tag-authored synthetic fixtures; unchanged handwritten geometry and rename map; native evidence is recorded separately"
+}

@@ -1,59 +1,95 @@
-# BlockBridge — native feasibility gate
+# BlockBridge
 
-**This repository currently contains an original synthetic feasibility test, not a finished app. Native QCAD results are pending. No browser application or production DXF importer has been built.**
+A local-first, deliberately bounded DXF block-transfer review. It shows how retaining or overwriting same-named definitions would change incoming or existing instances, then exports a minimally renamed **donor only**. The destination is never written or included in the download.
 
-The proposed utility reviews the effect of transferring ordinary named DXF blocks into an existing drawing. Reusing a conflicting definition can change incoming geometry; overwriting it can change existing geometry. Nested blocks make the problem harder: identical outer definitions can depend on different same-named inner blocks.
+**Work in progress. The application and a separately scoped product-verification pipeline are being validated. Browser QA and native execution of the actual browser-exported donor must pass before release.**
 
-## Go/no-go evidence
+## Current verification boundary
 
-Before building the UI, the hosted workflow must establish all of the following using a pinned, source-built QCAD Community Edition:
+- The original strict native gate remains **FAIL**. This is retained as a genuine result, not rewritten or converted to success.
+- [Pinned QCAD diagnostic run, attempt 2](https://github.com/Masanori-Spec/block-bridge/actions/runs/37310795371), at `51500237c9d2e0aef21e8827f91f86c30adb5831`, passed 502 native geometry/structure assertions: two untouched save/reopen baselines and five paste scenarios, including post-reopen block editing and undo.
+- A separate Python tag reader with exact Fraction arithmetic verified all seven saved geometries before any SDK audit mutation.
+- Both untouched native-save baselines already cause 15 reported `INVALID_OWNER_HANDLE` repairs and 77 total owner normalizations in ezdxf. Prepared cases add exactly two corresponding block-record owner normalizations. This is a pinned QCAD/dxflib serialization behavior, independently reproduced without a transfer.
+- A new, separately named native-behavior gate checks exact frozen semantic ownership identities, full before/after snapshots, negative mutations, and the **actual browser-exported donor**. Its bounded acceptance does not turn the strict zero-repair result into a pass or certify general DXF interoperability.
 
-1. Keeping the destination definitions reproduces the expected incoming-geometry corruption
-2. Overwriting definitions reproduces the expected existing-geometry corruption
-3. Renaming both conflicting donor dependencies preserves all handwritten expected geometry
-4. Renaming only the outer block remains insufficient
-5. Prepared geometry survives native save and reopen with named editable INSERT references intact, and the equivalent SAME circle block remains shared
+The product output is the original donor with approved name-token replacements. It is **not** a QCAD-resaved merged drawing. [Detailed native acceptance boundary](tests/native/BEHAVIOR_GATE.md)
 
-The native assertions inspect transformed LINE and CIRCLE shapes rather than accepting only an exit status or bounding box. Original Python Fraction arithmetic independently checks the fixture coordinates and verifies that the prepared donor changes exactly nine approved block-name tokens, preserving every other byte. Pinned ezdxf is an additional test-only structural audit.
+## What the app does
 
-Current local checks: exact fixture oracle and ezdxf 1.4.4 structural audit pass. These are not native-consumer evidence and do not establish product readiness.
+1. Read an owner-complete destination and donor in the supported profile
+2. Compare block definitions and their full nested dependencies
+3. Rehearse three outcomes: original geometry, keeping destination definitions, and overwriting definitions
+4. Review replacement names for differing definitions; reuse proven-equivalent definitions
+5. Approve the exact source-hash-bound plan
+6. Download `blockbridge-transfer.zip` with:
+   - `donor-transfer.dxf`
+   - `collision-map.json`
+   - `preservation-report.json`
 
-## Synthetic case
+Only supported `BLOCK_RECORD` name values, `BLOCK` name values and `INSERT` references may change. Every other donor byte is checked for preservation, including numeric spelling, transforms, base points, handles, owners, record order and newline style. No whole-document CAD serialization is used.
 
-All fixtures are authored for this project and contain no customer data.
+The browser runtime is original JavaScript with no CAD SDK, network service, account, telemetry, font download or runtime dependency. File content is held in page memory. The only persisted preference is the interface language. Bundled examples are fetched locally from the same static application; selected file content is not uploaded.
 
-- Target LEAF: a horizontal line from (0, 0) to (10, 0)
-- Donor LEAF: a vertical line from (0, 0) to (0, 20)
-- Both ASSEMBLY definitions insert LEAF at (5, 5), scale 2, rotation 90 degrees
-- Target inserts ASSEMBLY at (100, 0); donor inserts ASSEMBLY at (0, 100)
-- Donor also inserts LEAF at (50, 50), scale 0.5, rotation 180 degrees
-- Both drawings contain equivalent SAME circle definitions, centered at (2, 2), radius 3
+## Deliberately narrow v1 profile
 
-The prepared donor renames LEAF to TRANSFER_LEAF and ASSEMBLY to TRANSFER_ASSEMBLY while retaining SAME. The merged expected lines are (105, 5) → (105, 25), (5, 105) → (-35, 105), and (50, 50) → (50, 40). Expected circles are (202, 2), radius 3 and (2, 2), radius 3.
+The initial plan considered ARC, LWPOLYLINE and arbitrary rotations. **Those are excluded from this implementation until additional independent native cases establish them.**
 
-## Proposed product boundary, conditional on the gate
+Accepted:
+- ASCII AC1015/R2000 DXF, with explicitly matching drawing units
+- Model-space LINE, CIRCLE and INSERT
+- Ordinary named blocks, with resolvable explicit ownership
+- Positive uniform scale and quarter-turn rotations
+- Whitelisted harmless structural records, including the synthetic fixture's standard active viewport
+- Supported continuous-layer properties; a conflicting same-named layer blocks export
 
-The future browser runtime would use original JavaScript/TypeScript, with no CAD SDK. Inputs would remain on-device; the destination input would never be modified. Outputs would be a minimally renamed donor DXF, input-hash-bound collision map, and preservation report after explicit review.
+Rejected:
+- ARC, LWPOLYLINE, arbitrary rotation, nonuniform or nonpositive scale
+- Text, fonts, dimensions, attributes, custom entities and unknown/dangerous tags
+- Dynamic/anonymous content blocks, XREFs, cycles, missing definitions, XDATA and extension dictionaries
+- Paper-space geometry, nonstandard extrusion or unsupported linetypes
+- Incomplete ownership, ambiguous names, malformed records or excessive nesting/expansion
 
-The initial profile is intentionally narrow: ASCII AC1015/R2000 DXF; model space; declared matching units; ordinary named blocks; 2D LINE, CIRCLE, ARC, LWPOLYLINE and INSERT; positive uniform insert scales and ordinary rotations. Conflicting layer properties would block export. Dynamic/anonymous blocks, XREFs, cycles, custom entities, XDATA/extension dictionaries, attributes, fonts/text, dimensions, nonempty paper space, unsupported linetypes/extrusion and unknown records would be rejected rather than silently altered.
+This is not a general-purpose DXF reader. A valid file from another CAD application can still contain unsupported records and be rejected. The UI never promises that an arbitrary CAD file is safe to rename. After preparation, import a copy in the intended CAD application and inspect it.
 
-## Existing alternatives and useful difference
+## The example
 
-Block renaming and dependency-aware import are established features, not novel inventions. [QCAD](https://www.qcad.org/doc/qcad/latest/reference/en/qcad_reference_manual_en.html) provides block/layer overwrite controls and manual renaming. [ezdxf's XREF module](https://ezdxf.readthedocs.io/en/stable/xref.html) already provides keep and prefix collision policies with dependencies. Autodesk documents [same-named block copy changes](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/AutoCAD-Copy-and-paste-dynamic-blocks-between-drawings-does-not-retain-changes-in-blocks.html), including nested-block renaming.
+`fixtures/owner-complete/` contains original tag-authored inputs with explicit ownership. All four files have zero audit findings, identical full before/after audit snapshots, and exact geometry checks. The earlier synthetic family is retained unchanged for historical evidence.
 
-The proposed distinction is a reviewable transfer rehearsal: direct and inherited collisions, actual incoming/existing geometry impacts for keep/overwrite policies, selective name changes, and independently checked preservation evidence. This repository currently validates only feasibility fixtures, not that full workflow.
+- Destination LEAF is a horizontal 10-unit line
+- Donor LEAF is a vertical 20-unit line
+- Both ASSEMBLY definitions contain the same direct INSERT tags, but depend on their different LEAF definitions
+- Both SAME definitions are equivalent circles and remain shared
 
-## Reproduce
+The app renames LEAF → TRANSFER_LEAF and ASSEMBLY → TRANSFER_ASSEMBLY. Keeping destination definitions without preparation changes two incoming instances. Overwriting definitions changes one existing instance. Prepared transfer retains the three intended world-space lines and both circles while keeping blocks editable.
 
-Run the native-gate GitHub Actions workflow. The native consumer is fetched and compiled only inside its hosted test job. Local lightweight checks:
+## Run and test
 
-    python scripts/create_fixtures.py
-    python tests/fixture_oracle.py
+Node 22 or newer:
+
+    npm ci
+    npm test
+    npm run build
+    npm run dev
+
+Open `http://127.0.0.1:4173`. The development server serves only the original runtime files and two bundled examples, and refuses write requests. `dist/` is a seven-file static bundle.
+
+Independent test-only Python checks use `ezdxf==1.4.4`:
+
     python -m pip install -r requirements-test.txt
-    python tests/structural_audit.py
+    python tests/fixture_oracle.py
+    python tests/owner_complete_audit.py
+    python tests/native/behavior_selftest.py
 
-## Distribution and rights
+Hosted product verification runs core tests, then sandboxed Chromium desktop/mobile flows, then a separate native QCAD source-build job. The native job consumes the same-run browser download, not a substitute hand-authored prepared file. Screenshot inspection is required before release. The original strict workflow remains distinct.
 
-All rights reserved for original project material. No new open-source license has been granted.
+## Existing alternatives
 
-QCAD Community Edition is a test-only GPLv3 consumer fetched from the official `qcad/qcad` source tag `v3.33.1.0`. Its [upstream license inventory](https://github.com/qcad/qcad/blob/v3.33.1.0/LICENSE.txt) also describes separately licensed resources. No QCAD source, binaries, fonts, resources, examples, documentation or raw native logs are distributed in this repository or app output. ezdxf is likewise a test-only dependency fetched from its ordinary package registry, not bundled in the product.
+Block renaming and dependency-aware import are established features. [QCAD](https://www.qcad.org/doc/qcad/latest/reference/en/qcad_reference_manual_en.html) offers overwrite controls and manual renaming; [ezdxf](https://ezdxf.readthedocs.io/en/stable/xref.html) offers keep/prefix policies with dependencies. Autodesk documents [same-name block-copy changes](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/AutoCAD-Copy-and-paste-dynamic-blocks-between-drawings-does-not-retain-changes-in-blocks.html), including nested blocks.
+
+The useful difference here is the explicit transfer rehearsal, selective byte-preserving donor patch, source-bound approval and independent preservation evidence. No new import algorithm or broad compatibility claim is made.
+
+## Rights and test-only dependencies
+
+All rights reserved for original project material. No open-source license is granted for this project.
+
+QCAD Community Edition is fetched only for hosted tests from official source tag `v3.33.1.0`, verified as commit `897079c2d11aaa0869f839a6cf5df8a937dbddbe`, with Ubuntu 22.04/Qt 5.15.3. Its [upstream license inventory](https://github.com/qcad/qcad/blob/v3.33.1.0/LICENSE.txt) governs QCAD and its separately licensed resources. No QCAD source, binaries, fonts, resources, examples or raw native logs are included in the application or source deliverable. Test artifacts allowlist only original observations, original app screenshots and DXFs generated from original synthetic inputs. ezdxf and Playwright are pinned test-only dependencies, not browser-runtime dependencies.

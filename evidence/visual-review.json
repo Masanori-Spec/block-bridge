@@ -1,0 +1,128 @@
+{
+  "schema": "blockbridge.visual-inspection.v1",
+  "status": "pass with one nonblocking hover-style observation",
+  "codeCommit": "dbd0914401410a505349d5a225522682eeda4b03",
+  "runUrl": "https://github.com/Masanori-Spec/block-bridge/actions/runs/37323082182",
+  "reviewedAtUtc": "2026-10-05T14:21:51.453845+00:00",
+  "method": "Original-resolution visual inspection of all 14 exact-run screenshots",
+  "screenshotCount": 14,
+  "observations": [
+    "Desktop 1440px and mobile 390px captures have no observed clipping or header overlap. Both language-button labels remain on one line.",
+    "Japanese and English glyphs render correctly. File selection, policy choices, rename inputs, approvals and export controls are readable.",
+    "No unfocused skip-link text leaks into any full-page capture; focused-link keyboard behavior is separately covered by the passing hosted regression.",
+    "Original and prepared previews show three lines and two circles with 0 existing and 0 incoming changes. Keep shows two red incoming changes with dashed intended geometry and counts 0/2. Overwrite shows one red existing change with dashed intended geometry and counts 1/0.",
+    "LEAF and ASSEMBLY replacement names, the reused SAME definition, and disabled versus approved export states agree with each captured scenario.",
+    "The mobile 40 mm scale label is legible after the adjustment."
+  ],
+  "nonblockingObservations": [
+    {
+      "filename": "mobile-390-policy-keep.png",
+      "observation": "The unselected prepared tab has a faint hover background/underline. The active keep tab is still distinguished by its bold green label and green underline, and the 0/2 impact result is correct."
+    }
+  ],
+  "blockingIssues": [],
+  "screenshots": [
+    {
+      "filename": "desktop-keyboard-approved-en.png",
+      "sha256": "73a1fd0879fd174004f778a1060256f0a61850715e7fab18deeb2dc505e81b88",
+      "width": 1440,
+      "height": 1605,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-keyboard-approved-ja.png",
+      "sha256": "e4c094661ebd0c72f1079634466c5f2e9bba3652af9989f4f019e7146057fc44",
+      "width": 1440,
+      "height": 1598,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-policy-original.png",
+      "sha256": "62f0fc5da99335cab67ba2a422a169a3929a522291ba876dbc34377f9c593942",
+      "width": 1440,
+      "height": 1593,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-policy-keep.png",
+      "sha256": "b840ec8e2ee3a679e257da5d6a3ad413b68f3d3f7044d51a9d007ed49a894eff",
+      "width": 1440,
+      "height": 1598,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-policy-overwrite.png",
+      "sha256": "6b8946eff204947ba6cd15a1ed44510a35b03c2f45234b72361a64397194438e",
+      "width": 1440,
+      "height": 1593,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-policy-prepared.png",
+      "sha256": "e5fbac59f556d4690f1f86e26369f534cf1f763d2ed6dc06d3e9586108199b27",
+      "width": 1440,
+      "height": 1598,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "desktop-real-files-prepared.png",
+      "sha256": "bae168c17c5a9347f467ca16d2b485c5804a7215e1760c6f1afada96088519cd",
+      "width": 1440,
+      "height": 1598,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-keyboard-approved-en.png",
+      "sha256": "fa8af1ac5848565642a9a5e035788687de1ccb6fa63dbb60542dbd79d201bce1",
+      "width": 390,
+      "height": 2610,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-keyboard-approved-ja.png",
+      "sha256": "13dfb648f0a6a3ba089d8ea0f426c767e2ac786068010ea54a940f1cd337eb7d",
+      "width": 390,
+      "height": 2504,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-policy-original.png",
+      "sha256": "08b50fc2ac72a543d00e9d90d46e785e1aa0b098372c1ee05b03afd98043a72c",
+      "width": 390,
+      "height": 2507,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-policy-keep.png",
+      "sha256": "678e0e665ae86ccf4b13e973858fe9944fc9dce6987466cb1edc0c55dfd31aaa",
+      "width": 390,
+      "height": 2520,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-policy-overwrite.png",
+      "sha256": "585448b5aaea5435d54fffbc673f3a18c33f0095ca2f6e14ac1da758d902f250",
+      "width": 390,
+      "height": 2507,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-policy-prepared.png",
+      "sha256": "eb34fc19e19983c85828a873abfcb3edffe0386c53aea0d1e315412f147db2d0",
+      "width": 390,
+      "height": 2520,
+      "result": "no blocking visual issue observed"
+    },
+    {
+      "filename": "mobile-390-real-files-prepared.png",
+      "sha256": "2ccdab4236bdfd632924cb708d628a88bf80744fc86fa328df4752a8c81e439c",
+      "width": 390,
+      "height": 2504,
+      "result": "no blocking visual issue observed"
+    }
+  ],
+  "limits": [
+    "Visual checks apply to captured synthetic desktop 1440px and mobile 390px states; they do not prove all possible files, viewports or browser behavior.",
+    "Native behavior is established separately by the product workflow and its frozen acceptance policy."
+  ]
+}

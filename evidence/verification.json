@@ -1,0 +1,60 @@
+{
+  "schema": "blockbridge.verified-release.v1",
+  "version": "0.1.0",
+  "verifiedCodeCommit": "dbd0914401410a505349d5a225522682eeda4b03",
+  "productWorkflow": {
+    "url": "https://github.com/Masanori-Spec/block-bridge/actions/runs/37323082182",
+    "runId": 37323082182,
+    "status": "success"
+  },
+  "strictWorkflow": {
+    "url": "https://github.com/Masanori-Spec/block-bridge/actions/runs/37323082239",
+    "runId": 37323082239,
+    "status": "failure",
+    "reason": "Pinned native QCAD resaving produces the same baseline ownership repairs; strict zero-repair result is not overridden."
+  },
+  "checks": {
+    "unitTestsPassed": 143,
+    "independentArtifactTestsPassed": 5,
+    "sandboxedBrowserCasesPassed": 24,
+    "screenshotsInspected": 14,
+    "validatorMutationsRejected": 40,
+    "ownerCompleteInputsClean": 4,
+    "nativeAssertionsPassed": 502,
+    "exactSavedGeometryCasesPassed": 7
+  },
+  "actualBrowserExport": {
+    "sha256": "249b9e396ccfa307d5b63a19794d42f7b9efb7c014925672a95d7abcafbcb173",
+    "changedNameTokens": 9,
+    "allOtherDonorBytesUnchanged": true,
+    "destinationUnmodified": true,
+    "sameDefinitionReused": true
+  },
+  "nativeConsumer": {
+    "name": "QCAD Community Edition",
+    "sourceTag": "v3.33.1.0",
+    "sourceCommit": "897079c2d11aaa0869f839a6cf5df8a937dbddbe",
+    "qt": "5.15.3",
+    "runner": "Ubuntu 22.04",
+    "scopedNativeBehavior": "pass",
+    "strictZeroRepair": "fail",
+    "policySha256": "06507a363c9ee100163d9fafabae603f308101f899c84b7def95cf28121d9f05"
+  },
+  "supportedScope": [
+    "ASCII AC1015 with whitelisted structural records and explicit resolved ownership",
+    "LINE, CIRCLE, INSERT; model space; ordinary named blocks",
+    "Positive uniform scale and quarter-turn rotations; matching explicit units"
+  ],
+  "excludedClaims": [
+    "General DXF interoperability",
+    "Repair-free QCAD-resaved merged DXF",
+    "ARC, LWPOLYLINE or arbitrary-angle support",
+    "Unseen customer-file or other native CAD consumer validation"
+  ],
+  "deliveryBoundary": "The product exports a byte-patched original donor, never a QCAD-resaved merged drawing.",
+  "snapshotReproducibility": {
+    "sourceFileSha256Stable": true,
+    "snapshotHashesGuaranteedAcrossSeparateReads": false,
+    "reason": "ezdxf can synthesize absent GUID header values on loading; the full snapshot invariant compares before/after the same in-memory audit without rewriting source files."
+  }
+}

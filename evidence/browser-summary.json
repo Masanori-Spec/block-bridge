@@ -1,0 +1,182 @@
+{
+  "schema": "blockbridge.browser-suite.v1",
+  "status": "passed",
+  "commit": "dbd0914401410a505349d5a225522682eeda4b03",
+  "consumer": "Playwright Chromium",
+  "runner": "GitHub-hosted Ubuntu 22.04",
+  "sandboxRequested": true,
+  "coverageBoundary": "Synthetic ASCII AC1015 LINE/CIRCLE/INSERT, matching units, positive uniform scales, quarter-turn rotations",
+  "visualReviewRequired": true,
+  "visualReviewPerformedByRunner": false,
+  "fullProductReadinessAsserted": false,
+  "tests": [
+    {
+      "title": "desktop / transfer.spec.mjs / sandboxed browser and accessible Japanese/English keyboard review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 840
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / demo rehearses keep, overwrite, and prepared geometry impacts",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 780
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / real file inputs work offline and export deterministic hash-bound original bytes",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 425
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / invalid and conflicting rename proposals cannot export",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 521
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / editing either approved rename clears both approvals and requires a fresh review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 757
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / target replacement immediately clears stale approvals and preview during the read",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 299
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / donor replacement immediately clears stale approvals and preview during the read",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 291
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / reset removes inputs, approvals, and preview and supports a fresh upload",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 295
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / unsupported input clears an approved review and valid replacement recovers",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 366
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / mismatched declared units block preview and export",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 331
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / a slow old donor cannot replace a newer unsupported file",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 289
+    },
+    {
+      "title": "desktop / transfer.spec.mjs / a slow old donor cannot resurrect a reset review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 385
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / sandboxed browser and accessible Japanese/English keyboard review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 663
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / demo rehearses keep, overwrite, and prepared geometry impacts",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 701
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / real file inputs work offline and export deterministic hash-bound original bytes",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 383
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / invalid and conflicting rename proposals cannot export",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 486
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / editing either approved rename clears both approvals and requires a fresh review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 768
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / target replacement immediately clears stale approvals and preview during the read",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 281
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / donor replacement immediately clears stale approvals and preview during the read",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 278
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / reset removes inputs, approvals, and preview and supports a fresh upload",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 294
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / unsupported input clears an approved review and valid replacement recovers",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 344
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / mismatched declared units block preview and export",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 241
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / a slow old donor cannot replace a newer unsupported file",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 322
+    },
+    {
+      "title": "mobile-390 / transfer.spec.mjs / a slow old donor cannot resurrect a reset review",
+      "status": "passed",
+      "expectedStatus": "passed",
+      "retry": 0,
+      "durationMs": 402
+    }
+  ]
+}

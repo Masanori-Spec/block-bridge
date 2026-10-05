@@ -2,15 +2,19 @@
 
 A local-first, deliberately bounded DXF block-transfer review. It shows how retaining or overwriting same-named definitions would change incoming or existing instances, then exports a minimally renamed **donor only**. The destination is never written or included in the download.
 
-**Work in progress. The application and a separately scoped product-verification pipeline are being validated. Browser QA and native execution of the actual browser-exported donor must pass before release.**
+**Verified v0.1 within the deliberately narrow profile below.** [Product verification](https://github.com/Masanori-Spec/block-bridge/actions/runs/37323082182) passed at `dbd0914401410a505349d5a225522682eeda4b03`: 143 app tests, five independent export-contract tests, 24 sandboxed desktop/mobile browser cases, 40 validator mutation controls, and 502 native assertions on the actual browser-exported donor. All 14 exact-run screenshots were visually inspected. [Machine-readable release evidence](evidence/verification.json)
+
+The original strict zero-repair native-output audit still fails and is disclosed separately. A scoped native-behavior pass is not a repair-free merged-DXF or general CAD compatibility claim.
+
+[Desktop preview](docs/screenshots/desktop-keep.png) · [Mobile preview](docs/screenshots/mobile-prepared.png)
 
 ## Current verification boundary
 
-- The original strict native gate remains **FAIL**. This is retained as a genuine result, not rewritten or converted to success.
+- The original strict native gate remains **FAIL**, including the [fresh strict run on the verified code commit](https://github.com/Masanori-Spec/block-bridge/actions/runs/37323082239). This is retained as a genuine result, not rewritten or converted to success.
 - [Pinned QCAD diagnostic run, attempt 2](https://github.com/Masanori-Spec/block-bridge/actions/runs/37310795371), at `51500237c9d2e0aef21e8827f91f86c30adb5831`, passed 502 native geometry/structure assertions: two untouched save/reopen baselines and five paste scenarios, including post-reopen block editing and undo.
 - A separate Python tag reader with exact Fraction arithmetic verified all seven saved geometries before any SDK audit mutation.
 - Both untouched native-save baselines already cause 15 reported `INVALID_OWNER_HANDLE` repairs and 77 total owner normalizations in ezdxf. Prepared cases add exactly two corresponding block-record owner normalizations. This is a pinned QCAD/dxflib serialization behavior, independently reproduced without a transfer.
-- A new, separately named native-behavior gate checks exact frozen semantic ownership identities, full before/after snapshots, negative mutations, and the **actual browser-exported donor**. Its bounded acceptance does not turn the strict zero-repair result into a pass or certify general DXF interoperability.
+- The separately named native-behavior gate **passed** on the actual browser download. It checks exact frozen semantic ownership identities, full before/after snapshots, both independent saved-geometry oracles and negative mutations. Its bounded acceptance does not turn the strict zero-repair result into a pass or certify general DXF interoperability. [Native evidence](evidence/native-behavior.json) · [Browser evidence](evidence/browser-summary.json) · [Visual inspection](evidence/visual-review.json)
 
 The product output is the original donor with approved name-token replacements. It is **not** a QCAD-resaved merged drawing. [Detailed native acceptance boundary](tests/native/BEHAVIOR_GATE.md)
 
@@ -66,10 +70,13 @@ The app renames LEAF → TRANSFER_LEAF and ASSEMBLY → TRANSFER_ASSEMBLY. Keepi
 
 Node 22 or newer:
 
+    npm run dev
+
+No package installation is needed just to run the original static app. For development tests and a static build:
+
     npm ci
     npm test
     npm run build
-    npm run dev
 
 Open `http://127.0.0.1:4173`. The development server serves only the original runtime files and two bundled examples, and refuses write requests. `dist/` is a seven-file static bundle.
 
@@ -80,7 +87,7 @@ Independent test-only Python checks use `ezdxf==1.4.4`:
     python tests/owner_complete_audit.py
     python tests/native/behavior_selftest.py
 
-Hosted product verification runs core tests, then sandboxed Chromium desktop/mobile flows, then a separate native QCAD source-build job. The native job consumes the same-run browser download, not a substitute hand-authored prepared file. Screenshot inspection is required before release. The original strict workflow remains distinct.
+Hosted product verification runs core tests, then sandboxed Chromium desktop/mobile flows, then a separate native QCAD source-build job. The native job consumes the same-run browser download, not a substitute hand-authored prepared file. All 14 screenshots from the verified code commit have been inspected; future releases require their own exact-run screenshot review. The original strict workflow remains distinct.
 
 ## Existing alternatives
 

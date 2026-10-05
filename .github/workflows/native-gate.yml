@@ -76,6 +76,10 @@ jobs:
             artifacts/native/build-summary.json
             artifacts/native/native-gate.json
             artifacts/native/runtime-summary.json
+            artifacts/native/independent-audit.json
+            artifacts/native/saved-geometry-oracle.json
+            artifacts/native/target-baseline.dxf
+            artifacts/native/donor-baseline.dxf
             artifacts/native/unprepared-keep.dxf
             artifacts/native/unprepared-overwrite.dxf
             artifacts/native/outer-only-keep.dxf

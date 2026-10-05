@@ -1,0 +1,90 @@
+name: Native QCAD feasibility gate
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/native-gate.yml'
+      - 'scripts/build-qcad.sh'
+      - 'tests/**'
+      - 'fixtures/**'
+      - 'requirements-test.txt'
+  pull_request:
+    paths:
+      - '.github/workflows/native-gate.yml'
+      - 'scripts/build-qcad.sh'
+      - 'tests/**'
+      - 'fixtures/**'
+      - 'requirements-test.txt'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-qcad-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-feasibility:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Independent fixture and mutation oracles
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-test.txt > "$RUNNER_TEMP/blockbridge-pip.log" 2>&1
+          python tests/fixture_oracle.py
+          python tests/oracle_selftest.py
+          python tests/structural_audit.py
+          node --check tests/native/gate.js
+          bash -n scripts/build-qcad.sh
+      - name: Install official Ubuntu Qt5 build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update > "$RUNNER_TEMP/blockbridge-apt.log" 2>&1
+          sudo apt-get install -y --no-install-recommends \
+            build-essential git qt5-qmake qtbase5-dev qtbase5-dev-tools \
+            qtscript5-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev \
+            libqt5xmlpatterns5-dev libqt5opengl5-dev libglu1-mesa-dev \
+            libfreetype6-dev libfontconfig1-dev libssl-dev libdbus-1-dev \
+            libsm-dev libx11-dev libxext-dev libxrender-dev \
+            >> "$RUNNER_TEMP/blockbridge-apt.log" 2>&1
+      - name: Build pinned official QCAD Community Edition source
+        shell: bash
+        run: bash scripts/build-qcad.sh
+      - name: Execute native paste, shape, block, save and reopen assertions
+        shell: bash
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          python tests/native/run_gate.py
+      - name: Retain only original concise evidence and original-fixture DXF outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockbridge-native-evidence
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            artifacts/oracle/*.json
+            artifacts/native/build-summary.json
+            artifacts/native/native-gate.json
+            artifacts/native/runtime-summary.json
+            artifacts/native/unprepared-keep.dxf
+            artifacts/native/unprepared-overwrite.dxf
+            artifacts/native/outer-only-keep.dxf
+            artifacts/native/prepared-keep.dxf
+            artifacts/native/prepared-overwrite.dxf
+      - name: Remove ephemeral third-party source, build and raw logs
+        if: always()
+        shell: bash
+        run: |
+          rm -rf "$RUNNER_TEMP/blockbridge-consumer" "$RUNNER_TEMP/blockbridge-config" "$RUNNER_TEMP/blockbridge-runtime"
+          rm -f "$RUNNER_TEMP/blockbridge-source-build.log" "$RUNNER_TEMP/blockbridge-native-runtime.log" \
+            "$RUNNER_TEMP/blockbridge-apt.log" "$RUNNER_TEMP/blockbridge-pip.log"

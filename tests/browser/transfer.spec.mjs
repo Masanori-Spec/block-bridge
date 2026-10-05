@@ -78,6 +78,88 @@ async function tabTo(page, selector) {
   throw new Error(`Keyboard traversal did not reach ${selector}`);
 }
 
+async function assertHeaderFits(page) {
+  const layout = await page.evaluate(() => {
+    const textRects = element => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      return [...range.getClientRects()].filter(rect => rect.width > 0 && rect.height > 0);
+    };
+    const bounds = element => {
+      // Include rendered descendants/text so overflowing content cannot hide
+      // behind a flex container's smaller assigned width.
+      const rects = [element, ...element.querySelectorAll('*')]
+        .map(node => node.getBoundingClientRect()).concat(textRects(element))
+        .filter(rect => rect.width > 0 && rect.height > 0);
+      return { left: Math.min(...rects.map(rect => rect.left)), right: Math.max(...rects.map(rect => rect.right)) };
+    };
+    const button = document.querySelector('#locale-button');
+    const buttonRect = button.getBoundingClientRect();
+    const lines = [];
+    for (const rect of textRects(button).sort((a, b) => a.top - b.top)) {
+      if (!lines.some(line => Math.min(line.bottom, rect.bottom) > Math.max(line.top, rect.top))) {
+        lines.push({ top: rect.top, bottom: rect.bottom });
+      }
+    }
+    return {
+      width: innerWidth, brand: bounds(document.querySelector('.brand')),
+      actions: bounds(document.querySelector('.header-actions')), locale: bounds(button),
+      button: { left: buttonRect.left, right: buttonRect.right }, localeLineCount: lines.length,
+    };
+  });
+  expect(layout.localeLineCount, 'The language button must use one visual line').toBe(1);
+  expect(layout.locale.left).toBeGreaterThanOrEqual(layout.button.left - 0.5);
+  expect(layout.locale.right).toBeLessThanOrEqual(layout.button.right + 0.5);
+  expect(layout.brand.right, 'The rendered brand must not overlap header actions').toBeLessThanOrEqual(layout.actions.left + 0.5);
+  expect(layout.brand.left).toBeGreaterThanOrEqual(-0.5);
+  expect(layout.actions.right).toBeLessThanOrEqual(layout.width + 0.5);
+}
+
+async function isPaintClipped(locator) {
+  return locator.evaluate(element => {
+    const style = getComputedStyle(element);
+    const rect = element.getBoundingClientRect();
+    const legacy = style.clip.match(/^rect\(([^)]+)\)$/);
+    if (legacy) {
+      const values = legacy[1].split(/[,\s]+/).map(parseFloat);
+      if (values.length === 4 && values.every(Number.isFinite)) {
+        const [top, right, bottom, left] = values;
+        if (right <= left || bottom <= top) return true;
+      }
+    }
+    const inset = style.clipPath.match(/^inset\(([^)]+)\)$/);
+    if (!inset) return false;
+    const parts = inset[1].split(' round ')[0].trim().split(/\s+/);
+    if (!parts.length || parts.length > 4) return false;
+    const [top, right = top, bottom = top, left = right] = parts;
+    const pixels = (value, dimension) => /^-?[\d.]+(?:px|%)$/.test(value)
+      ? parseFloat(value) * (value.endsWith('%') ? dimension / 100 : 1) : NaN;
+    // A zero-area clip is required independently of viewport position. Merely
+    // moving a fixed link above the viewport caused the full-page regression.
+    return pixels(top, rect.height) + pixels(bottom, rect.height) >= rect.height
+      || pixels(left, rect.width) + pixels(right, rect.width) >= rect.width;
+  });
+}
+
+async function assertSkipLinkKeyboardAccess(page) {
+  const skip = page.locator('.skip-link');
+  await expect(skip).not.toBeFocused();
+  expect(await isPaintClipped(skip), 'An unfocused skip link must have an empty paint clip').toBe(true);
+  await page.keyboard.press('Tab');
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeVisible();
+  expect(await isPaintClipped(skip), 'Keyboard focus must reveal the skip link').toBe(false);
+  const visible = await skip.evaluate(element => {
+    const rect = element.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 && rect.left >= 0 && rect.top >= 0
+      && rect.right <= innerWidth && rect.bottom <= innerHeight;
+  });
+  expect(visible, 'The focused skip link must fit in the viewport').toBe(true);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#workbench$/);
+  await expect(page.locator('#workbench')).toBeInViewport();
+}
+
 async function assertSandbox(browser) {
   const session = await browser.newBrowserCDPSession();
   const commandLine = await session.send('Browser.getBrowserCommandLine');
@@ -134,7 +216,10 @@ test('sandboxed browser and accessible Japanese/English keyboard review', async 
   await expect(page.locator('#target-file')).toHaveAccessibleName(/元の図面/);
   await expect(page.locator('#donor-file')).toHaveAccessibleName(/渡す図面/);
   await expect(page.locator('#status')).toHaveAttribute('aria-live', /polite|assertive/);
+  await assertHeaderFits(page);
+  await assertSkipLinkKeyboardAccess(page);
   await tabTo(page, "[data-testid='load-demo']");
+  expect(await isPaintClipped(page.locator('.skip-link'))).toBe(true);
   await page.keyboard.press('Enter');
   await ready(page);
   await tabTo(page, "[data-policy='keep']");
@@ -157,6 +242,8 @@ test('sandboxed browser and accessible Japanese/English keyboard review', async 
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.locator('#target-file')).toHaveAccessibleName(/Destination/i);
   await expect(page.locator('#donor-file')).toHaveAccessibleName(/Donor/i);
+  await assertHeaderFits(page);
+  expect(await isPaintClipped(page.locator('.skip-link'))).toBe(true);
   await expect(page.locator('#policy-summary')).not.toHaveText(jaSummary);
   await expect(page.locator('#export-button')).toBeEnabled();
   await expect(page.locator('[data-rename="LEAF"]')).toHaveValue('TRANSFER_LEAF');
